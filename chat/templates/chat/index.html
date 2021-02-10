@@ -3,7 +3,12 @@
 
     <form method="POST">
         {% csrf_token %}
-        <input type="text" name="guest-name" placeholder="Guest">
+        {% if user.is_authenticated %}
+        	<input id="#default-name" type="text" name="guest-name" value="{{ user.username }}" readonly>
+        {% else %}
+        	<input id="#guest-name" type="text" name="guest-name" placeholder="Guest">
+        {% endif %}
+
         <br>
         <input type="text" name="room-name" placeholder="Room Name">
         <br>
@@ -11,3 +16,7 @@
     </form>
 
 {% endblock content %}
+
+{% block script %}
+
+{% endblock script %}

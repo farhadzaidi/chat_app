@@ -1,15 +1,15 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
-from .models import CustomUser
+from .models import Profile
 
 def sign_up_view(request):
 
 	if request.method == "POST":
 		form = UserCreationForm(request.POST)
 		if form.is_valid():
-			new_user = form.save(commit=False)
-			new_user.customuser = CustomUser(user=new_user)
-			new_user.save()
+			new_user = form.save()
+			new_user.profile = Profile(user=new_user)
+			new_user.profile.save()
 			return redirect('chat-index')
 
 

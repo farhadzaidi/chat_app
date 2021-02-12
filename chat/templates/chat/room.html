@@ -9,13 +9,17 @@
 
 {% block content %}
     
-    <h1>Name: {{ guest_name }}</h1>
+    <h1>Name: {{ username }}</h1>
 
     <div id="chat-log"></div>
     <input id="message-input" type="text" size="100"><br>
     <button id="message-send">Send</button>
 
+    <!-- room name for js -->
     <input type="hidden" id="room-name" value="{{ room_name }}">
+
+    <!-- current user for js -->
+    <input type="hidden" id="current-user" value="{{ username }}">
     
 {% endblock content %}
 
@@ -24,26 +28,38 @@
     
     $(document).ready(() => {
 
-            // get room name from html input
+            // get room name from html input to start websocket
             let roomName = $("#room-name").val();
 
             // create websocket using room name
             let chatSocket = new WebSocket(`ws://${window.location.host}/ws/chat/${roomName}/`);
 
-            function sendMessageToServer() {
-                message = $("#message-input").val();
 
-                // send message to server
-                chatSocket.send(message);
+            // get current user from html input
+            let currentUser = $("#current-user").val();
+
+            // function to send message to the server
+            function sendMessageToServer() {
+                // get message info and put it in an object
+                let messageText = $("#message-input").val();
+                let messageInfo = {
+                    text: messageText,
+                    author: currentUser
+                }
+                
+                // send object to server as a string
+                chatSocket.send(JSON.stringify(messageInfo));
 
                 // reset input value
                 $("#message-input").val("");
             }
 
+            // send message when send button is clicked
             $("#message-send").click(() => {
                 sendMessageToServer();
             });
 
+            // send message when enter key is pressed
             $("#message-input").keydown((e) => {
                 if (e.keyCode === 13) {
                     sendMessageToServer();
@@ -54,9 +70,20 @@
             // recieve message from server
             chatSocket.onmessage = (e) => {
 
-                let message = e.data
+                let messageInfo = JSON.parse(e.data)
 
-                $("#chat-log").append(`<h5>${message}</h5>`)
+                // appends message to chat log with sent or recieved class depending on if the current user sent the message or not
+                if (currentUser == messageInfo.author) {
+                    $("#chat-log").append(`
+                        <h5 class="sent text-right mr-3 mt-3">${messageInfo.text}</h5>
+                        <h6 class="sent text-right mr-3 mb-3">${messageInfo.author}</h6>
+                        `)
+                } else {
+                    $("#chat-log").append(`
+                        <h5 class="recieved text-left ml-3 mt-3">${messageInfo.text}</h5>
+                        <h6 class="sent text-left ml-3 mb-3">${messageInfo.author}</h6>
+                        `)
+                }
             };
 
     });

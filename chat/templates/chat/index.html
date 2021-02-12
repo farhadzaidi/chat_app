@@ -1,12 +1,27 @@
 {% extends 'chat/base.html' %}
 {% block content %}
+    
+    {% if notifications %}
+        {% for notification in notifications %}
+            <h2>{{ notification.text }}</h2>
+            {% if notification.notification_type == 'friend-request' %}
+                <a href="#">Click here to accept or decline</a>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <h1>No notifications</h1>
+    {% endif %}
 
+    <!-- public chat room -->
+    <hr>
+    <h1>Public Chat Room</h1>
+    <hr>
     <form method="POST">
         {% csrf_token %}
         {% if user.is_authenticated %}
-        	<input id="#default-name" type="text" name="guest-name" value="{{ user.username }}" readonly>
+        	<input type="text" name="username" value="{{ user.username }}" readonly>
         {% else %}
-        	<input id="#guest-name" type="text" name="guest-name" placeholder="Guest">
+        	<input type="text" name="username" placeholder="Guest">
         {% endif %}
 
         <br>
@@ -14,6 +29,63 @@
         <br>
         <button type="submit">Enter</button>
     </form>
+
+
+    <!-- private chat room -->
+    <hr class="mt-5">
+    <h1>My Chat Rooms</h1>
+    <hr>
+    {% if user.is_authenticated %}
+        <button data-toggle="modal" data-target="#private-chat-modal">Create a Private Chat Room</button>
+    {% else %}
+        <a href="{% url 'users-sign-in' %}">Sign in to create a private chat room</a>
+    {% endif %}
+
+
+    <button data-toggle="modal" data-target="#add-friend-modal">Add Friend</button>
+
+
+
+    <!-- private chat room modal -->
+    <div class="modal" id="private-chat-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">Create Private Chat Room</div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="text" name="private-room-name">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit">Submit</button>
+                        <button data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- add friend modal -->
+    <div class="modal" id="add-friend-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">Add a Friend</div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="text" name="friend-name" placeholder="Enter your friend's username">
+                    </div>
+                    <div class="modal-footer">
+                        <button type=submit>Send Friend Request</button>
+                        <button data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 {% endblock content %}
 

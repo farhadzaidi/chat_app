@@ -26,7 +26,7 @@
         {% endif %}
 
         <br>
-        <input type="text" name="room-name" placeholder="Room Name">
+        <input type="text" name="room-name" placeholder="Room Name" maxlength="15">
         <br>
         <button type="submit">Enter</button>
     </form>
@@ -36,15 +36,24 @@
     <hr class="mt-5">
     <h1>My Chat Rooms</h1>
     <hr>
+
+    {% for private_chat in private_chats %}
+
+        <a href="{% url 'chat-room' private_chat.chat_name %}">{{ private_chat.chat_alias }}</a>
+
+    {% endfor %}
+
+    <hr>
     {% if user.is_authenticated %}
         <button data-toggle="modal" data-target="#private-chat-modal">Create a Private Chat Room</button>
     {% else %}
         <a href="{% url 'users-sign-in' %}">Sign in to create a private chat room</a>
     {% endif %}
 
-
-    <button data-toggle="modal" data-target="#add-friend-modal">Add Friend</button>
-
+    <!-- add friends -->
+    {% if user.is_authenticated %}
+        <button data-toggle="modal" data-target="#add-friend-modal">Add Friend</button>
+    {% endif %}
 
 
     <!-- private chat room modal -->
@@ -53,16 +62,19 @@
             <div class="modal-content">
                 <div class="modal-header">Create Private Chat Room</div>
 
-                <form method="POST">
-                    {% csrf_token %}
                     <div class="modal-body">
                         <input type="text" name="private-room-name">
+                        <select name="invite-friends" id="invite-friends" multiple>
+                            {% for friend in user.profile.friends.all %}
+                                <option value="{{ friend.username }}">{{ friend.username }}</option>
+                            {% endfor%}
+                        </select>
+                        <div id="private-room-errors"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit">Submit</button>
+                        <button id="create-private-chat">Create Private Chat</button>
                         <button data-dismiss="modal">Close</button>
                     </div>
-                </form>
 
             </div>
         </div>

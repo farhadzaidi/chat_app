@@ -1,16 +1,17 @@
 {% extends 'chat/base.html' %}
+{% load static %}
 {% block content %}
-    
-    {% if notifications %}
-        {% for notification in notifications %}
-            <h2>{{ notification.text }}</h2>
-            {% if notification.notification_type == 'friend-request' %}
-                <a href="#">Click here to accept or decline</a>
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        <h1>No notifications</h1>
-    {% endif %}
+
+    <input id="auth" type="hidden" value="{{ authenticated }}">
+
+    {% for friend_request in friend_requests %}
+        <div id="friend-request-{{ friend_request.sender.pk }}">
+            <h3>{{ friend_request.sender }} has sent you a friend request</h3>
+            <button id="accept-friend-{{ friend_request.sender.pk }}">Accept</button>
+            <button id="decline-friend-{{ friend_request.sender.pk }}" >Decline</button>
+        </div>
+
+    {% endfor %}
 
     <!-- public chat room -->
     <hr>
@@ -73,16 +74,15 @@
             <div class="modal-content">
                 <div class="modal-header">Add a Friend</div>
 
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        <input type="text" name="friend-name" placeholder="Enter your friend's username">
-                    </div>
-                    <div class="modal-footer">
-                        <button type=submit>Send Friend Request</button>
-                        <button data-dismiss="modal">Close</button>
-                    </div>
-                </form>
+                <div class="modal-body">
+                    <input type="text" name="friend-name" placeholder="Enter your friend's username">
+                    <div id="add-friend-errors"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="send-friend-request">Send Friend Request</button>
+                    <button data-dismiss="modal">Close</button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -90,5 +90,7 @@
 {% endblock content %}
 
 {% block script %}
+    
+    <script src="{% static 'chat/js/index.js' %}"></script>
 
 {% endblock script %}

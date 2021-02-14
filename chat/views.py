@@ -4,7 +4,7 @@ from django.urls import reverse
 from users.models import Profile, FriendRequest
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Message, PrivateChat
+from .models import Message, PrivateChat, PrivateChatInvitation
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from pytz import timezone
@@ -60,20 +60,43 @@ def index(request):
 
 				chat_name = get_random_string(length=16)
 				chat_alias = request.POST['chatName']
-				admin = request.user
-				group_members = [User.objects.get(username=friend) for friend in request.POST.getlist('inviteFriends[]')]
 
 				new_private_chat = PrivateChat(chat_name=chat_name, chat_alias=chat_alias)
 				new_private_chat.save()
-
-				new_private_chat.admins.add(admin)
-
-				for group_member in group_members:
-					new_private_chat.group_members.add(group_member)
-
 				new_private_chat.group_members.add(request.user)
+				new_private_chat.save()
 
 				new_private_chat.save()
+
+				invite_friends = request.POST.getlist('inviteFriends[]')
+
+				for friend in invite_friends:
+					reciever = User.objects.get(username=friend)
+					new_invitation = PrivateChatInvitation(sender=request.user, reciever=reciever, chat=new_private_chat)
+					new_invitation.save()
+
+				messages.success(request, f'{new_private_chat} created and invitations sent out.')
+
+				return JsonResponse({}, status=200)
+
+			if 'acceptInvitation' in request.POST:
+
+				private_chat = PrivateChat.objects.get(pk=request.POST['acceptInvitation'])
+				private_chat.group_members.add(request.user)
+
+				invitation = PrivateChatInvitation.objects.get(chat=private_chat)
+				invitation.delete()
+
+				messages.success(request, f'You are now a part of {private_chat}')
+
+				return JsonResponse({}, status=200)
+
+			if 'declineInvitation' in request.POST:
+
+				private_chat = PrivateChat.objects.get(pk=request.POST['declineInvitation'])
+
+				invitation = PrivateChatInvitation.objects.get(chat=private_chat)
+				invitation.delete()
 
 				return JsonResponse({}, status=200)
 
@@ -81,7 +104,7 @@ def index(request):
 		# AJAX GET requests
 		data = {}
 
-		if 'getData' in request.GET: 
+		if 'getInfo' in request.GET: 
 			
 			# get usernames 
 			usernames = [user.username for user in User.objects.all()]
@@ -102,10 +125,16 @@ def index(request):
 			friend_request_pks = [friend_req.sender.pk for friend_req in friend_requests]
 			data['friend_request_pks'] = friend_request_pks
 
+			# get primary keys of user who sent private chat invitations to the current user
+			chat_invitations = PrivateChatInvitation.objects.filter(reciever=request.user)
+			chat_invitation_pks = [chat.chat.pk for chat in chat_invitations]
+			data['chat_invitation_pks'] = chat_invitation_pks
+
 			# get names of user's private chats
 			private_chats = PrivateChat.objects.filter(group_members=request.user)
 			private_chat_names = [chat.chat_alias for chat in private_chats]
 			data['private_chat_names'] = private_chat_names
+
 
 		return JsonResponse(data, status=200)
 
@@ -132,11 +161,16 @@ def index(request):
 	if request.user.is_authenticated:
 		context['authenticated'] = 'yes'
 
+		private_chats = PrivateChat.objects.filter(group_members=request.user)
+		context['private_chats'] = private_chats
+
+		chat_invitations = PrivateChatInvitation.objects.filter(reciever=request.user)
+		context['chat_invitations'] = chat_invitations
+
 		friend_requests = FriendRequest.objects.filter(reciever=request.user)
 		context['friend_requests'] = friend_requests
 
-		private_chats = PrivateChat.objects.filter(group_members=request.user)
-		context['private_chats'] = private_chats
+
 
 	else:
 		context['authenticated'] = 'no'
@@ -182,6 +216,28 @@ def private_room(request, **kwargs):
 				message_timestamp = timestamp_to_est.strftime('%b %-d, %-I:%M %p')
 
 				return JsonResponse({'message_timestamp': message_timestamp}, status=200)
+
+			if 'inviteFriends[]' in request.POST:
+
+				invite_friends = request.POST.getlist('inviteFriends[]')
+				
+				for friend in invite_friends:
+					reciever = User.objects.get(username=friend)
+					chat = PrivateChat.objects.get(chat_name=room_name)
+					new_invitation = PrivateChatInvitation(sender=request.user, reciever=reciever, chat=chat)
+					new_invitation.save()
+
+				return JsonResponse({}, status=200)
+
+		data = {}
+
+		if 'getInfo' in request.GET:
+
+			friends = request.user.profile.friends.all()
+			friends_list = [friend.username for friend in friends]
+			data['friends_list'] = friends_list
+
+		return JsonResponse(data, status=200)			
 
 
 	room = PrivateChat.objects.get(chat_name=room_name)

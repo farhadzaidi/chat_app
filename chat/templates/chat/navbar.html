@@ -1,10 +1,43 @@
-<ul>
-	<li><a href="{% url 'chat-index' %}">Home</a></li>
-	{% if not user.is_authenticated %}
-		<li><a href="{% url 'users-sign-in' %}">Sign In</a></li>
-		<li><a href="{% url 'users-sign-up' %}">Sign Up</a></li>
-	{% else %}
-		<li><a href="{% url 'users-sign-out' %}">Sign Out</a></li>
-	{% endif %}
 
-</ul>
+<div class="navbar navbar-expand navbar-dark bg-dark">
+	<ul class="navbar-nav mr-auto">
+		<li class="nav-item">
+			<a class="nav-link" href="{% url 'chat-index' %}"><i class="fas fa-home"></i></a>
+		</li>
+<!-- 		<li class="nav-item">
+			<a class ="nav-link" href="#friends-list" data-toggle="collapse">
+				<i class="fas fa-user"></i>
+			</a>
+		</li> -->
+		<li class="nav-item">
+			<a id="friends-list-toggler" class ="nav-link" href="#">
+				<i class="fas fa-user"></i>
+			</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="#"><i class="fas fa-user-friends"></i></a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="#"><i class="fas fa-cog"></i></a>
+		</li>
+	</ul>
+	<ul class="navbar-nav ml-auto">
+		{% if not user.is_authenticated %}
+			<li class="nav-item">
+				<a class="nav-link" href="{% url 'users-sign-in'%}">Sign In</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="{% url 'users-sign-up'%}">Sign Up</a>
+			</li>
+		{% else %}
+			<li class="nav-item">
+				<a class="nav-link" href="{% url 'users-sign-out'%}">Sign Out</a>
+			</li>
+		{% endif %}
+	</ul>
+</div>
+
+<!-- <div id="friends-list">
+	<h1>Hello</h1>
+	<h1>Hi</h1>
+</div> -->

@@ -4,6 +4,16 @@
 
     <input id="auth" type="hidden" value="{{ authenticated }}">
 
+    {% for invitation in chat_invitations %}
+
+        <div id="chat-invitation-{{ invitation.chat.pk }}">
+            <h3>{{ invitation.sender }} has invited you to join {{ invitation.chat }}</h3>
+            <button id="accept-invitation-{{ invitation.chat.pk }}">Accept</button>
+            <button id="decline-invitation-{{ invitation.chat.pk }}" >Decline</button>
+        </div>
+
+    {% endfor %}
+
     {% for friend_request in friend_requests %}
         <div id="friend-request-{{ friend_request.sender.pk }}">
             <h3>{{ friend_request.sender }} has sent you a friend request</h3>
@@ -103,6 +113,9 @@
 
 {% block script %}
     
-    <script src="{% static 'chat/js/index.js' %}"></script>
+    <script src="{% static 'chat/js/index/get-info.js' %}"></script>
+    <script src="{% static 'chat/js/index/add-friends.js' %}"></script>
+    <script src="{% static 'chat/js/index/chat-invitations.js' %}"></script>
+    <script src="{% static 'chat/js/index/create-private-chat.js' %}"></script>
 
 {% endblock script %}

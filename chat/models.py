@@ -9,6 +9,14 @@ class PrivateChat(models.Model):
 	def __str__(self):
 		return self.chat_alias
 
+class PrivateChatInvitation(models.Model):
+	sender = models.ForeignKey(User, on_delete=models.CASCADE)
+	reciever = models.ForeignKey(User, related_name='chat_invite_reciever', on_delete=models.CASCADE)
+	chat = models.ForeignKey(PrivateChat, on_delete=models.CASCADE)
+
+	def __str__(self):
+		return f'{self.sender} to {self.reciever} for {self.chat}'
+
 class Message(models.Model):
 	text = models.CharField(max_length=300)
 	author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -17,3 +25,4 @@ class Message(models.Model):
 
 	def __str__(self):
 		return f'{self.text} by {self.author}'
+

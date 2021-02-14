@@ -26,7 +26,7 @@
         {% endif %}
 
         <br>
-        <input type="text" name="room-name" placeholder="Room Name" maxlength="15">
+        <input type="text" name="room-name" placeholder="Room Name">
         <br>
         <button type="submit">Enter</button>
     </form>
@@ -39,7 +39,7 @@
 
     {% for private_chat in private_chats %}
 
-        <a href="{% url 'chat-room' private_chat.chat_name %}">{{ private_chat.chat_alias }}</a>
+        <a href="{% url 'private-chat-room' private_chat.chat_name %}">{{ private_chat.chat_alias }}</a>
 
     {% endfor %}
 

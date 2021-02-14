@@ -1,0 +1,158 @@
+{% extends 'chat/base.html' %}
+{% load static %}
+
+{% block style %}
+    
+    <link rel="stylesheet" href="{% static 'chat/css/private-room.css' %}">
+
+{% endblock style %}
+
+{% block content %}
+
+    {% csrf_token %}
+    
+    <h1>Name: {{ user.username }}</h1>
+    <h1>Room Name: {{ room.chat_alias }}</h1>
+
+    <div id="chat-log">
+        {% for message in room_messages %}
+            {% if message.author == user %}
+                <h5 class="sent text-right mr-3 mt-3">{{ message.text }}</h5>
+                <h6 class="sent text-right mr-3"> {{ message.author }}</h6>
+                <h6 class="sent text-right mr-3 mb-3">{{ message.timestamp|date:"M j, g:i A" }}</h6>
+            {% else %}
+                <h5 class="recieved text-left ml-3 mt-3">{{ message.text }}</h5>
+                <h6 class="recieved text-left ml-3"> {{ message.author }}</h6>
+                <h6 class="recieved text-left ml-3 mb-3">{{ message.timestamp|date:"M j, g:i A" }}</h6>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <input id="message-input" type="text" size="100"><br>
+    <button id="message-send">Send</button>
+
+    <button id="invite-friends" data-toggle="modal" data-target="#invite-friends-modal">Invite Friends</button>
+
+    <!-- invite friends modal -->
+    <div class="modal" id="invite-friends-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">Invite Friends</div>
+
+                    <div class="modal-body">
+                        <select name="invite-friends" id="invite-friends" multiple>
+                            {% for friend in user.profile.friends.all %}
+                                <option value="{{ friend.username }}">{{ friend.username }}</option>
+                            {% endfor%}
+                        </select>
+                        <div id="invite-friends-errors"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="invite-friends-submit">Invite Friends</button>
+                        <button data-dismiss="modal">Close</button>
+                    </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- room name for js -->
+    <input type="hidden" id="room-name" value="{{ room.chat_name }}">
+
+    <!-- current user for js -->
+    <input type="hidden" id="current-user" value="{{ user.username }}">
+    
+{% endblock content %}
+
+{% block script %}
+    <script>
+    
+
+        let csrf_token = $("input[name=csrfmiddlewaretoken]").val();
+
+        // get room name from html input to start websocket
+        let roomName = $("#room-name").val();
+
+        // create websocket using room name
+        let privateChatSocket = new WebSocket(`ws://${window.location.host}/ws/private-chat/${roomName}/`);
+
+
+        // get current user from html input
+        let currentUser = $("#current-user").val();
+
+        function saveMessage(messageText, currentUser) {
+
+            $.ajax({
+                type: "post",
+                data: {
+                    messageText: messageText,
+                    messageAuthor: currentUser,
+                    csrfmiddlewaretoken: csrf_token,
+                },
+                success: (event) => {
+                    sendMessageToServer(messageText, currentUser, event.message_timestamp);
+                }
+            });
+
+        }
+
+        // function to send message to the server
+        function sendMessageToServer(messageText, currentUser, messageTimestamp) {
+
+            // get message info and put it in an object
+            let messageInfo = {
+                text: messageText,
+                author: currentUser,
+                timestamp: messageTimestamp
+            }
+            
+            // send object to server as a string
+            privateChatSocket.send(JSON.stringify(messageInfo));
+
+            // reset input value
+            $("#message-input").val("");
+        }
+
+        // send message when send button is clicked
+        $("#message-send").click(() => {
+            let messageText = $("#message-input").val();
+            saveMessage(messageText, currentUser);
+        });
+
+        // send message when enter key is pressed
+        $("#message-input").keydown((e) => {
+            if (e.keyCode === 13) {
+                let messageText = $("#message-input").val();
+                saveMessage(messageText, currentUser);
+            }
+        }); 
+
+
+        // recieve message from server
+        privateChatSocket.onmessage = (e) => {
+
+            let messageInfo = JSON.parse(e.data)
+
+            // appends message to chat log with sent or recieved class depending on if the current user sent the message or not
+            if (currentUser == messageInfo.author) {
+                $("#chat-log").append(`
+                    <h5 class="sent text-right mr-3 mt-3">${messageInfo.text}</h5>
+                    <h6 class="sent text-right mr-3">${messageInfo.author}</h6>
+                    <h6 class="sent text-right mr-3 mb-3">${messageInfo.timestamp}</h6>
+                    `)
+            } else {
+                $("#chat-log").append(`
+                    <h5 class="recieved text-left ml-3 mt-3">${messageInfo.text}</h5>
+                    <h6 class="recieved text-left ml-3">${messageInfo.author}</h6>
+                    <h6 class="recived text-left ml-3 mb-3">${messageInfo.timestamp}</h6>
+                    `)
+            }
+        };
+
+        let test = "this is a test";
+
+    </script>
+
+
+    <script src="{% static 'chat/js/private-chat.js' %}"></script>
+
+{% endblock script %}

@@ -1,0 +1,15 @@
+#chat-log {
+	border: solid 3px black;
+	width: 80vw;
+	min-height: 50vh;
+}
+
+.sent {
+	/*on the right */
+	
+
+}
+
+.recieved {
+	/* on the left */
+}

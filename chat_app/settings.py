@@ -108,4 +108,5 @@ CHANNEL_LAYERS = {
     },
 }
 
+LOGIN_URL = 'users-sign-in'
 LOGIN_REDIRECT_URL = 'chat-index'

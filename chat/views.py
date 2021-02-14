@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.urls import reverse
-from users.models import FriendRequest
+from users.models import Profile, FriendRequest
 from django.contrib import messages
 from django.http import JsonResponse
-from users.models import Profile
-from .models import PrivateChat
+from .models import Message, PrivateChat
 from django.utils.crypto import get_random_string
+from django.contrib.auth.decorators import login_required
+from pytz import timezone
+from django.core.exceptions import PermissionDenied
 
 def index(request):
 
@@ -143,8 +145,8 @@ def index(request):
 	return render(request, 'chat/index.html', context)
 
 
-
-def room(request, **kwargs):
+# public chat
+def public_room(request, **kwargs):
 
 	context = {
 		'room_name': kwargs['room_name'],
@@ -155,4 +157,42 @@ def room(request, **kwargs):
 	else:
 		context['username'] = request.session['username']
 
-	return render(request, 'chat/room.html', context)
+	return render(request, 'chat/public_room.html', context)
+
+# private chat
+@login_required
+def private_room(request, **kwargs):
+
+	room_name = kwargs['room_name']
+
+	if request.is_ajax():
+
+		if request.method == "POST":
+
+			if 'messageText' in request.POST:
+
+				message_text = request.POST['messageText']
+				message_author = User.objects.get(username=request.POST['messageAuthor'])
+				message_chat = PrivateChat.objects.get(chat_name=room_name)
+
+				new_message = Message(text=message_text, author=message_author, chat=message_chat)
+				new_message.save();
+
+				timestamp_to_est = new_message.timestamp.astimezone(timezone('US/Eastern'))
+				message_timestamp = timestamp_to_est.strftime('%b %-d, %-I:%M %p')
+
+				return JsonResponse({'message_timestamp': message_timestamp}, status=200)
+
+
+	room = PrivateChat.objects.get(chat_name=room_name)
+	room_messages = Message.objects.filter(chat=room)
+
+	context = {
+		'room': room,
+		'room_messages': room_messages
+	}
+
+	if request.user not in room.group_members.all():
+		raise PermissionDenied
+	else:
+		return render(request, 'chat/private_room.html', context)

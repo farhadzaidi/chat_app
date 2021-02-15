@@ -1,8 +1,8 @@
-// get room name from html input to start websocket
-let roomName = $("#room-name").val();
+// get chat name from html input to start websocket
+let chatName = $("#chat-name").val();
 
-// create websocket using room name
-let publicChatSocket = new WebSocket(`ws://${window.location.host}/ws/chat/${roomName}/`);
+// create websocket using chat name
+let publicChatSocket = new WebSocket(`ws://${window.location.host}/ws/chat/${chatName}/`);
 
 // get current user from html input
 let currentUser = $("#current-user").val();

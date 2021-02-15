@@ -20,7 +20,7 @@ function validatePrivateChat(chatName, inviteFriends) {
 		if (re.test(chatName)) {
 			return true;
 		} else {
-			return 'The chat name can contain only alphanumeric characters.'
+			return 'The chat name can contain only alphanumeric characters and it must not contain any spaces.'
 		}
 	}
 
@@ -51,7 +51,7 @@ function createPrivateChat(chatName, inviteFriends) {
 
 $("#create-private-chat").click(() => {
 
-	let chatName = $("input[name=private-room-name]").val();
+	let chatName = $("input[name=private-chat-name]").val();
 	let inviteFriends = $("#invite-friends").val();
 
 	createPrivateChat(chatName, inviteFriends);

@@ -1,11 +1,11 @@
 
 let csrf_token = $("input[name=csrfmiddlewaretoken]").val();
 
-// get room name from html input to start websocket
-let roomName = $("#room-name").val();
+// get chat name from html input to start websocket
+let chatName = $("#chat-name").val();
 
-// create websocket using room name
-let privateChatSocket = new WebSocket(`ws://${window.location.host}/ws/private-chat/${roomName}/`);
+// create websocket using chat name
+let privateChatSocket = new WebSocket(`ws://${window.location.host}/ws/private-chat/${chatName}/`);
 
 
 // get current user from html input

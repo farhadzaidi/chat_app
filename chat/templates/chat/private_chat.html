@@ -3,7 +3,7 @@
 
 {% block style %}
     
-    <link rel="stylesheet" href="{% static 'chat/css/private-room.css' %}">
+    <link rel="stylesheet" href="{% static 'chat/css/private-chat.css' %}">
 
 {% endblock style %}
 
@@ -12,10 +12,10 @@
     {% csrf_token %}
     
     <h1>Name: {{ user.username }}</h1>
-    <h1>Room Name: {{ room.chat_alias }}</h1>
+    <h1>Chat Name: {{ chat.chat_alias }}</h1>
 
     <div id="chat-log">
-        {% for message in room_messages %}
+        {% for message in chat_messages %}
             {% if message.author == user %}
                 <h5 class="sent text-right mr-3 mt-3">{{ message.text }}</h5>
                 <h6 class="sent text-right mr-3"> {{ message.author }}</h6>
@@ -41,7 +41,7 @@
                     <div class="modal-body">
                         <select id="invite-friends" name="invite-friends" multiple>
                             {% for friend in user.profile.friends.all %}
-                                {% if friend not in room.group_members.all %}
+                                {% if friend not in chat.group_members.all %}
                                 <option value="{{ friend.username }}">{{ friend.username }}</option>
                                 {% endif %}
                             {% endfor%}
@@ -57,8 +57,8 @@
         </div>
     </div>
 
-    <!-- room name for js -->
-    <input type="hidden" id="room-name" value="{{ room.chat_name }}">
+    <!-- chat name for js -->
+    <input type="hidden" id="chat-name" value="{{ chat.chat_name }}">
 
     <!-- current user for js -->
     <input type="hidden" id="current-user" value="{{ user.username }}">

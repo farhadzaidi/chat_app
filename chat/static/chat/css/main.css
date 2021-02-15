@@ -12,7 +12,7 @@ body {
 .friends-list {
 	width: 20vw;
 	height: 100vh;
-	position: fixed;
+	position: absolute;
 	left: -20vw;
 	transition: .3s;
 }
@@ -20,7 +20,7 @@ body {
 .page-content {
 	width: 100vw;
 	min-height: 100vh;
-	position: fixed;
+	position: absolute;
 	left: 0;
 	transition: .3s;
 }

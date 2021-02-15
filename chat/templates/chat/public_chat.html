@@ -3,21 +3,21 @@
 
 {% block style %}
     
-    <link rel="stylesheet" href="{% static 'chat/css/public-room.css' %}">
+    <link rel="stylesheet" href="{% static 'chat/css/public-chat.css' %}">
 
 {% endblock style %}
 
 {% block content %}
     
     <h1>Name: {{ username }}</h1>
-    <h1>Room Name: {{ room_name }}</h1>
+    <h1>Chat Name: {{ chat_name }}</h1>
 
     <div id="chat-log"></div>
     <input id="message-input" type="text" size="100"><br>
     <button id="message-send">Send</button>
 
-    <!-- room name for js -->
-    <input type="hidden" id="room-name" value="{{ room_name }}">
+    <!-- chat name for js -->
+    <input type="hidden" id="chat-name" value="{{ chat_name }}">
 
     <!-- current user for js -->
     <input type="hidden" id="current-user" value="{{ username }}">

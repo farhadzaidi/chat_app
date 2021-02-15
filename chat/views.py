@@ -9,6 +9,7 @@ from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from pytz import timezone
 from django.core.exceptions import PermissionDenied
+import re
 
 def index(request):
 
@@ -61,9 +62,9 @@ def index(request):
 				chat_name = get_random_string(length=16)
 				chat_alias = request.POST['chatName']
 
-				new_private_chat = PrivateChat(chat_name=chat_name, chat_alias=chat_alias)
+				new_private_chat = PrivateChat(name=chat_name, alias=chat_alias)
 				new_private_chat.save()
-				new_private_chat.group_members.add(request.user)
+				new_private_chat.members.add(request.user)
 				new_private_chat.save()
 
 				new_private_chat.save()
@@ -82,9 +83,9 @@ def index(request):
 			if 'acceptInvitation' in request.POST:
 
 				private_chat = PrivateChat.objects.get(pk=request.POST['acceptInvitation'])
-				private_chat.group_members.add(request.user)
+				private_chat.members.add(request.user)
 
-				invitation = PrivateChatInvitation.objects.get(chat=private_chat)
+				invitation = PrivateChatInvitation.objects.get(chat=private_chat, reciever=request.user)
 				invitation.delete()
 
 				messages.success(request, f'You are now a part of {private_chat}')
@@ -95,7 +96,7 @@ def index(request):
 
 				private_chat = PrivateChat.objects.get(pk=request.POST['declineInvitation'])
 
-				invitation = PrivateChatInvitation.objects.get(chat=private_chat)
+				invitation = PrivateChatInvitation.objects.get(chat=private_chat, reciever=request.user)
 				invitation.delete()
 
 				return JsonResponse({}, status=200)
@@ -131,8 +132,8 @@ def index(request):
 			data['chat_invitation_pks'] = chat_invitation_pks
 
 			# get names of user's private chats
-			private_chats = PrivateChat.objects.filter(group_members=request.user)
-			private_chat_names = [chat.chat_alias for chat in private_chats]
+			private_chats = PrivateChat.objects.filter(members=request.user)
+			private_chat_names = [chat.alias for chat in private_chats]
 			data['private_chat_names'] = private_chat_names
 
 
@@ -143,15 +144,23 @@ def index(request):
 	# POST requests
 	if request.method == 'POST':
 
-		# enter public room
-		if 'room-name' in request.POST:
-			room_name = request.POST['room-name']
-			username = request.POST['username']
+		# enter public chat
+		if 'chat-name' in request.POST:
+			chat_name = request.POST['chat-name']
 
-			request.session['username'] = username
+			regex = '^[a-zA-Z0-9]+$'
 
-			return redirect(reverse('chat-room', kwargs={'room_name': room_name}))
+			if re.match(regex, chat_name):
 
+				username = request.POST['username']
+
+				request.session['username'] = username
+
+				return redirect(reverse('public-chat', kwargs={'chat_name': chat_name}))
+
+			else:
+				messages.error(request, 'The chat name must contain only alphanumeric characters and must not contain any spaces.')
+				return redirect('chat-index')
 
 	# GET requests
 	context = {
@@ -161,7 +170,7 @@ def index(request):
 	if request.user.is_authenticated:
 		context['authenticated'] = 'yes'
 
-		private_chats = PrivateChat.objects.filter(group_members=request.user)
+		private_chats = PrivateChat.objects.filter(members=request.user)
 		context['private_chats'] = private_chats
 
 		chat_invitations = PrivateChatInvitation.objects.filter(reciever=request.user)
@@ -180,10 +189,10 @@ def index(request):
 
 
 # public chat
-def public_room(request, **kwargs):
+def public_chat(request, **kwargs):
 
 	context = {
-		'room_name': kwargs['room_name'],
+		'chat_name': kwargs['chat_name'],
 	}
 
 	if request.user.is_authenticated:
@@ -191,13 +200,13 @@ def public_room(request, **kwargs):
 	else:
 		context['username'] = request.session['username']
 
-	return render(request, 'chat/public_room.html', context)
+	return render(request, 'chat/public_chat.html', context)
 
 # private chat
 @login_required
-def private_room(request, **kwargs):
+def private_chat(request, **kwargs):
 
-	room_name = kwargs['room_name']
+	chat_name = kwargs['chat_name']
 
 	if request.is_ajax():
 
@@ -207,7 +216,7 @@ def private_room(request, **kwargs):
 
 				message_text = request.POST['messageText']
 				message_author = User.objects.get(username=request.POST['messageAuthor'])
-				message_chat = PrivateChat.objects.get(chat_name=room_name)
+				message_chat = PrivateChat.objects.get(name=chat_name)
 
 				new_message = Message(text=message_text, author=message_author, chat=message_chat)
 				new_message.save();
@@ -223,7 +232,7 @@ def private_room(request, **kwargs):
 				
 				for friend in invite_friends:
 					reciever = User.objects.get(username=friend)
-					chat = PrivateChat.objects.get(chat_name=room_name)
+					chat = PrivateChat.objects.get(name=chat_name)
 					new_invitation = PrivateChatInvitation(sender=request.user, reciever=reciever, chat=chat)
 					new_invitation.save()
 
@@ -232,23 +241,23 @@ def private_room(request, **kwargs):
 		data = {}
 
 		if 'getInfo' in request.GET:
-
-			friends = request.user.profile.friends.all()
-			friends_list = [friend.username for friend in friends]
-			data['friends_list'] = friends_list
+			chat = PrivateChat.objects.get(name=chat_name)
+			invitations_sent = PrivateChatInvitation.objects.filter(chat=chat)
+			friends_sent_to = [invitation.reciever.username for invitation in invitations_sent]
+			data['friends_sent_to'] = friends_sent_to
 
 		return JsonResponse(data, status=200)			
 
 
-	room = PrivateChat.objects.get(chat_name=room_name)
-	room_messages = Message.objects.filter(chat=room)
+	chat = PrivateChat.objects.get(name=chat_name)
+	chat_messages = Message.objects.filter(chat=chat)
 
 	context = {
-		'room': room,
-		'room_messages': room_messages
+		'chat': chat,
+		'chat_messages': chat_messages
 	}
 
-	if request.user not in room.group_members.all():
+	if request.user not in chat.members.all():
 		raise PermissionDenied
 	else:
-		return render(request, 'chat/private_room.html', context)
+		return render(request, 'chat/private_chat.html', context)

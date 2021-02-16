@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
 	friends = models.ManyToManyField(User, related_name='friends', blank=True)
+	unverified_email = models.CharField(max_length=100, blank=True)
 
 	def __str__(self):
 		return f'{self.user.username}'

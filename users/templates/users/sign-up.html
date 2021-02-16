@@ -4,6 +4,9 @@
 
 	<form method="POST">
 		{% csrf_token %}
+		<input type="email" name="email" placeholder="Email"><br>
+		<p><small>*Optional, but recommended in case you forget your username or password.</small></p>
+
 		{{ form }}
 		<button type="submit">Sign Up</button>
 	</form>

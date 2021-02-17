@@ -1,0 +1,11 @@
+{% extends 'chat/base.html' %}
+{% block content %}
+
+	<form method="POST">
+		{% csrf_token %}
+		<p>Enter the email address that is associated with your account and we will send you an email with your username.</p>
+		<input type="email" name="email" placeholder="Email">
+		<button type="submit">Send Email</button>
+	</form>
+
+{% endblock content %}

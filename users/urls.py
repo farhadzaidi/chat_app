@@ -7,5 +7,7 @@ urlpatterns = [
     path('sign-in/', LoginView.as_view(template_name='users/sign-in.html'), name='users-sign-in'),
     path('sign-out/', LogoutView.as_view(template_name='users/sign-out.html'), name='users-sign-out'),
     path('verify-email/<int:pk>/', views.verify_email_view, name='users-verify-email'),
+   	path('resend-verification-email/', views.resend_verification_email_view, name='users-resend-verification-email'),
+   	path('forgot-username/', views.forgot_username_view, name='users-forgot-username'),
 
 ]

@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth.models import User
 
 def sign_up_view(request):
 
@@ -58,12 +59,8 @@ def sign_up_view(request):
 				# send verification email
 				send_mail(subject, message, sender, recipient, html_message=html_message)
 
-				# notify user that the email has been sent
-				verify_email_notice = '''\
-				An email has been sent to the email address you provided asking you to confirm your email address. 
-				Please verify your email address as it will not be associated with your account until you do so.
-				'''
-				messages.info(request, verify_email_notice)
+				# notify user
+				messages.info(request, 'A verification email has been sent to your email address.')
 			else:
 				messages.success(request, 'Account created successfully!')
 
@@ -95,3 +92,57 @@ def verify_email_view(request, **kwargs):
 	else:
 		raise PermissionDenied
 
+def resend_verification_email_view(request):
+
+	# info for verification email
+	username = request.user.username
+	pk = request.user.pk
+	domain = request.META['HTTP_HOST']
+
+	# construct verification email 
+	subject = 'Verify your email'
+	message = f'''\
+	Hi {username},
+	Thanks for creating an account on my chat application.
+	Click the following link to verify your email address:
+	http://{domain}/users/verify-email/{pk}/
+	'''
+	sender = 'zaidi.farhad03@gmail.com'
+	recipient = [request.user.profile.unverified_email]
+
+	# context for html message
+	email_context = {
+		'username': username,
+		'pk': pk,
+		'domain': domain,
+		}
+	html_message = render_to_string('users/email_templates/verification_email.html', email_context)
+
+	# send verification email
+	send_mail(subject, message, sender, recipient, html_message=html_message)
+
+	return redirect('chat-index')
+
+def forgot_username_view(request):
+
+	if request.method == 'POST':
+
+		email = request.POST['email']
+		username = User.objects.get(email=email)
+		domain = request.META['HTTP_HOST']
+ 
+		subject = 'Chat - Recover Username'
+		message = f'''\n
+		Your username is {username}.
+		Click the following link to return to the sign in page: 
+		http://{domain}/users/sign-in/
+		'''
+		sender = 'zaidi.farhad03@gmail.com'
+		recipient = [email]
+
+		send_mail(subject, message, sender, recipient)
+
+		messages.info(request, 'An email has been sent to your email address with your username.')
+		return redirect('users-sign-in')
+
+	return render(request, 'users/forgot-username.html')

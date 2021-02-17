@@ -11,7 +11,7 @@ from pytz import timezone
 from django.core.exceptions import PermissionDenied
 import re
 
-def index(request):
+def index_view(request):
 
 	# AJAX requests
 	if request.is_ajax():
@@ -185,11 +185,12 @@ def index(request):
 		context['authenticated'] = 'no'
 
 
+	print(request.GET)
 	return render(request, 'chat/index.html', context)
 
 
 # public chat
-def public_chat(request, **kwargs):
+def public_chat_view(request, **kwargs):
 
 	context = {
 		'chat_name': kwargs['chat_name'],
@@ -204,7 +205,7 @@ def public_chat(request, **kwargs):
 
 # private chat
 @login_required
-def private_chat(request, **kwargs):
+def private_chat_view(request, **kwargs):
 
 	chat_name = kwargs['chat_name']
 

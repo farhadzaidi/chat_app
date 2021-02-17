@@ -7,7 +7,7 @@ class PrivateChat(models.Model):
 	members = models.ManyToManyField(User, related_name='members', blank=True)
 
 	def __str__(self):
-		return self.chat_alias
+		return self.alias
 
 class PrivateChatInvitation(models.Model):
 	sender = models.ForeignKey(User, on_delete=models.CASCADE)

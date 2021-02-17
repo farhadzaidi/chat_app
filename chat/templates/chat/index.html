@@ -4,6 +4,13 @@
 
     <input id="auth" type="hidden" value="{{ authenticated }}">
 
+    {% if user.is_authenticated %}
+        {% if user.profile.unverified_email != '' %}
+            <div class="alert alert-info">Your email has not been verified yet. <a href="{% url 'users-resend-verification-email' %}">Click here to resend verification email.</a></div>
+        {% endif  %}
+    {% endif %}
+
+
     {% for invitation in chat_invitations %}
 
         <div id="chat-invitation-{{ invitation.chat.pk }}">

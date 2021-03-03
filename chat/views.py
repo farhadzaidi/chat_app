@@ -11,14 +11,46 @@ from pytz import timezone
 from django.core.exceptions import PermissionDenied
 import re
 
-def index_view(request):
+def get_context(request, **kwargs):
+	kwargs['context'] = {}
+	kwargs['context']['name'] = 'Farhad'
+	return kwargs
 
+def notification_requests(request, **kwargs):
+
+	if request.is_ajax():
+		if request.method == 'POST':
+			if 'text' in request.POST:
+
+				return JsonResponse({}, status=200)
+
+
+def notification_decorator(func):
+
+	def wrapper(*args, **kwargs):
+
+		kwargs = get_context(*args, **kwargs)
+
+		notification_requests(*args, **kwargs)
+
+		return func(*args, **kwargs)
+
+
+	return wrapper
+
+
+@notification_decorator
+def index_view(request, **kwargs):
+
+	new_context = kwargs['context']
+	# print(new_context['name'])	
 	# AJAX requests
 	if request.is_ajax():
 
 		# AJAX POST requests
 		if request.method == 'POST':
 
+			# send friend request
 			if 'friendName' in request.POST:
 
 				sender = request.user
@@ -31,7 +63,8 @@ def index_view(request):
 
 				return JsonResponse({}, status=200)
 
-
+			# TODO: needs to be universal
+			# accept friend request
 			if 'acceptFriendPK' in request.POST:
 
 				sender = User.objects.get(pk=request.POST['acceptFriendPK'])
@@ -47,6 +80,8 @@ def index_view(request):
 
 				return JsonResponse({}, status=200)
 
+			# TODO: needs to be universal
+			# decline friend request
 			if 'declineFriendPK' in request.POST:
 
 				sender = User.objects.get(pk=request.POST['declineFriendPK'])
@@ -57,6 +92,7 @@ def index_view(request):
 
 				return JsonResponse({}, status=200)
 
+			# create private chat
 			if 'chatName' in request.POST:
 
 				chat_name = get_random_string(length=16)
@@ -80,6 +116,7 @@ def index_view(request):
 
 				return JsonResponse({}, status=200)
 
+			# TODO: needs to be universal
 			if 'acceptInvitation' in request.POST:
 
 				private_chat = PrivateChat.objects.get(pk=request.POST['acceptInvitation'])
@@ -92,6 +129,7 @@ def index_view(request):
 
 				return JsonResponse({}, status=200)
 
+			# TODO: needs to be universal
 			if 'declineInvitation' in request.POST:
 
 				private_chat = PrivateChat.objects.get(pk=request.POST['declineInvitation'])
@@ -107,16 +145,16 @@ def index_view(request):
 
 		if 'getInfo' in request.GET: 
 			
-			# get usernames 
+			# get all usernames in database 
 			usernames = [user.username for user in User.objects.all()]
 			data['usernames'] = usernames
 
-			# get user's friends list
+			# get current user's friends list
 			friends = request.user.profile.friends.all()
 			friends_list = [friend.username for friend in friends]
 			data['friends_list'] = friends_list
 
-			# get user's sent friend requests
+			# get current user's sent friend requests
 			friend_requests = FriendRequest.objects.filter(sender=request.user)
 			pending_friend_requests = [friend_request.reciever.username for friend_request in friend_requests]
 			data['pending_friend_requests'] = pending_friend_requests
@@ -168,7 +206,6 @@ def index_view(request):
 	}
 
 	if request.user.is_authenticated:
-		context['authenticated'] = 'yes'
 
 		private_chats = PrivateChat.objects.filter(members=request.user)
 		context['private_chats'] = private_chats
@@ -179,13 +216,6 @@ def index_view(request):
 		friend_requests = FriendRequest.objects.filter(reciever=request.user)
 		context['friend_requests'] = friend_requests
 
-
-
-	else:
-		context['authenticated'] = 'no'
-
-
-	print(request.GET)
 	return render(request, 'chat/index.html', context)
 
 

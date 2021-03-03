@@ -1,4 +1,5 @@
 
+// TODO: universal function
 // accept or decline private chat invitations
 function privateChatInvitations() {
 	for (let pk of chatInvitationPKs) {

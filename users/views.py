@@ -4,10 +4,12 @@ from .models import Profile
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
+from django.urls import reverse
+from django.views.generic import UpdateView
 
 def sign_up_view(request):
 
@@ -146,3 +148,20 @@ def forgot_username_view(request):
 		return redirect('users-sign-in')
 
 	return render(request, 'users/forgot-username.html')
+
+def password_change_done_view(request):
+	messages.success(request, 'Your password has been changed.')
+	logout(request)
+
+	return redirect('users-sign-in')
+
+def account_delete_view(request):
+
+	if request.method == "POST":
+		request.user.delete()
+		messages.info(request, 'Account Deleted.')
+		return redirect('chat-index')
+
+
+	return render(request, 'users/account-delete.html', {'title': 'Delete Account'})
+

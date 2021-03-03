@@ -1,3 +1,4 @@
+// TODO: universal variables
 let user_authenticated = $("#auth").val();
 
 let csrf_token = $("input[name=csrfmiddlewaretoken]").val();
@@ -15,15 +16,20 @@ let getInfo = () => {
             usernames = event.usernames;
             friendsList = event.friends_list;
             pendingFriendRequests = event.pending_friend_requests;
+
+            // TODO: universal info
             friendRequestPKs = event.friend_request_pks;
             chatInvitationPKs = event.chat_invitation_pks;
+
             privateChatNames = event.private_chat_names;
+
+            // TODO: universal function calls
             friendRequests();
             privateChatInvitations();
         }
     });
 }
 
-if (user_authenticated == "yes") {
+if (user_authenticated == "True") {
     getInfo();
 }

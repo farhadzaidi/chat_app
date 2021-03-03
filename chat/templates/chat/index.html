@@ -2,33 +2,42 @@
 {% load static %}
 {% block content %}
 
-    <input id="auth" type="hidden" value="{{ authenticated }}">
+    <button id="myButton">Press</button>
 
+    <!-- base -->
+    <input id="auth" type="hidden" value="{{ user.is_authenticated }}">
+
+    <!-- base -->
     {% if user.is_authenticated %}
         {% if user.profile.unverified_email != '' %}
             <div class="alert alert-info">Your email has not been verified yet. <a href="{% url 'users-resend-verification-email' %}">Click here to resend verification email.</a></div>
         {% endif  %}
     {% endif %}
 
+    <!-- base -->
+    <div id="chat-invitations" style="display: none;">
+        {% for invitation in chat_invitations %}
 
-    {% for invitation in chat_invitations %}
+            <div id="chat-invitation-{{ invitation.chat.pk }}">
+                <h3>{{ invitation.sender }} has invited you to join {{ invitation.chat }}</h3>
+                <button id="accept-invitation-{{ invitation.chat.pk }}">Accept</button>
+                <button id="decline-invitation-{{ invitation.chat.pk }}" >Decline</button>
+            </div>
 
-        <div id="chat-invitation-{{ invitation.chat.pk }}">
-            <h3>{{ invitation.sender }} has invited you to join {{ invitation.chat }}</h3>
-            <button id="accept-invitation-{{ invitation.chat.pk }}">Accept</button>
-            <button id="decline-invitation-{{ invitation.chat.pk }}" >Decline</button>
-        </div>
+        {% endfor %}     
+    </div>
 
-    {% endfor %}
+    <!-- base -->
+    <div id="friend-requests" style="display: none;">
+        {% for friend_request in friend_requests %}
+            <div id="friend-request-{{ friend_request.sender.pk }}">
+                <h3>{{ friend_request.sender }} has sent you a friend request</h3>
+                <button id="accept-friend-{{ friend_request.sender.pk }}">Accept</button>
+                <button id="decline-friend-{{ friend_request.sender.pk }}" >Decline</button>
+            </div>
 
-    {% for friend_request in friend_requests %}
-        <div id="friend-request-{{ friend_request.sender.pk }}">
-            <h3>{{ friend_request.sender }} has sent you a friend request</h3>
-            <button id="accept-friend-{{ friend_request.sender.pk }}">Accept</button>
-            <button id="decline-friend-{{ friend_request.sender.pk }}" >Decline</button>
-        </div>
-
-    {% endfor %}
+        {% endfor %}
+    </div>
 
     <!-- public chat  -->
     <hr>
@@ -124,5 +133,29 @@
     <script src="{% static 'chat/js/index/add-friends.js' %}"></script>
     <script src="{% static 'chat/js/index/chat-invitations.js' %}"></script>
     <script src="{% static 'chat/js/index/create-private-chat.js' %}"></script>
+
+    <!-- base -->
+    <script>
+        
+        $("#notifications-toggle").click((e) => {
+            e.preventDefault();
+            $("#chat-invitations").toggle();
+            $("#friend-requests").toggle();
+        });
+
+        $("#myButton").click(() => {
+            $.ajax({
+                type: "post",
+                data: {
+                    text: 'hello',
+                    csrfmiddlewaretoken: csrf_token,
+                },
+                success: () => {
+                    console.log('it worked!')
+                }
+            });
+        });
+
+    </script>
 
 {% endblock script %}

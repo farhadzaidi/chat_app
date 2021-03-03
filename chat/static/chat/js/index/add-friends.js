@@ -55,6 +55,7 @@ $("input[name=friend-name]").keydown((e) => {
 }); 
 
 
+// TODO: universal function
 // accept or decline friend requests
 function friendRequests() {
 	for (let pk of friendRequestPKs) {

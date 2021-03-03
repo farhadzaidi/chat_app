@@ -2,12 +2,7 @@
 
 body {
 	font-family: 'Open Sans', sans-serif;
-	color: #DCC156;
-	background-color: #071f30;
 }
-
-
-
 
 .friends-list {
 	width: 20vw;
@@ -31,4 +26,13 @@ body {
 
 .move-content-right {
 	left: 20vw;
+}
+
+.delete-account {
+	color: #d9534f;
+}
+
+.delete-account:hover {
+	background-color: #d9534f;
+	color: white;
 }
